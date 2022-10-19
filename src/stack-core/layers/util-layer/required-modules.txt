@@ -1,0 +1,3 @@
+@aws-sdk/client-kms
+@aws-sdk/client-lex-model-building-service
+exponential-backoff

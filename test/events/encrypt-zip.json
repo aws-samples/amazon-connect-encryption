@@ -1,0 +1,10 @@
+{
+  "currentIntent": {
+      "slots": {
+          "authNumber": "27587"
+      }
+  },
+  "sessionAttributes": {
+      "range": "1-5"
+  }
+}

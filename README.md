@@ -1,11 +1,33 @@
-## My Project
+## Amazon Connect and Lex Secure Input
 
-TODO: Fill this README out!
+This sample project demonstrates how to encrypt sensitive data such as PCI and PII collected through Amazon Connect and an Amazon Lex conversational bot. Included in this CDK-based project are:
 
-Be sure to:
+- Automated deployment of AWS Lambda functions, AWS Key Management Service encryption key and a sample Amazon Lex bot
+- A sample Amazon Connect contact flow that leverages the Lex input bot an Lambda functions to encrypt a credit card number and zip code.
 
-* Change the title in this README
-* Edit your repository description on GitHub
+### Pre-Requisites
+
+- An AWS account with system administrator and programmatic access
+- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [Node & NPM (14.x or higher)](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- [TypeScript](https://www.typescriptlang.org/download)
+- [Cloud Development Kit (CDK) 2.0 or higher](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
+
+### Getting Started
+
+1. Download clone the project from [GitLab](https://github.com/aws-samples/connect-encryption) or download the zip file
+1. From the command line, `cd` to the project's root directory
+1. Run `npm install`
+1. Run `npm run build` to transpile TypeScript to JavaScript and packages code and its dependencies before deploying to AWS
+1. Run `cdk deploy CoreStack`
+1. Create an Amazon Connect instance if one is not already available
+1. From the AWS Amazon Connect console, select the target Connect instance and click on the Contact Flows option
+1. Associate the secure_LexInput bot to the Connect instance
+1. Log into the Amazon Connect Administrative Console and create a new contact flow called Secure_Lex_Input by importing this file
+1. Save and publish the contact flow
+1. Associate a DID to the newly published contact flow
+1. Make a test call entering a fake 16-digit credit card number and zip code when prompted
+1. Once call is completed, validate through the CloudWatch logs that both values were encrypted
 
 ## Security
 
