@@ -8,14 +8,15 @@ This sample project demonstrates how to encrypt sensitive data such as PCI and P
 ### Pre-Requisites
 
 - An AWS account with system administrator and programmatic access
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-- [Node & NPM (14.x or higher)](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- [Node & NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) - See [supported AWS Lambda runtimes](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html)
 - [TypeScript](https://www.typescriptlang.org/download)
 - [Cloud Development Kit (CDK) 2.0 or higher](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
 
 ### Getting Started
 
-1. Download clone the project from [GitLab](https://github.com/aws-samples/connect-encryption) or download the zip file
+1. Clone the project source files from the [GitHub](https://github.com/aws-samples/connect-encryption) repository
 1. From the command line, `cd` to the project's root directory
 1. Run `npm install`
 1. Run `npm run build` to transpile TypeScript to JavaScript and packages code and its dependencies before deploying to AWS
