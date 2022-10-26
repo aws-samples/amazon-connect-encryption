@@ -1,6 +1,6 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AnyPrincipal, ArnPrincipal, PolicyDocument, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { AccountPrincipal, ArnPrincipal, PolicyDocument, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Alias, Key } from 'aws-cdk-lib/aws-kms';
 import { ResourceFactory } from '../common/resource-factory';
 import { LexBotConstruct } from './lex-bot-construct';
@@ -40,7 +40,7 @@ export class CoreStack extends Stack {
 						resources
 					}),
 					new PolicyStatement({
-						principals: [ new AnyPrincipal() ],
+						principals: [ new AccountPrincipal(this.account) ],
 						actions: kmsActions,
 						resources,
 						conditions: {
