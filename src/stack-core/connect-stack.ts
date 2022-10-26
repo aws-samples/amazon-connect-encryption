@@ -47,11 +47,7 @@ export class CoreStack extends Stack {
 							'StringEquals': {
 								'kms:CallerAccount': this.account,
 								'kms:ViaService': [
-									`firehose.${this.region}.amazonaws.com`,
-									`kinesis.${this.region}.amazonaws.com`,
-									`s3.${this.region}.amazonaws.com`,
-									`lambda.${this.region}.amazonaws.com`,
-									`codebuild.${this.region}.amazonaws.com`
+									`lambda.${this.region}.amazonaws.com`
 								]
 							}
 						}
