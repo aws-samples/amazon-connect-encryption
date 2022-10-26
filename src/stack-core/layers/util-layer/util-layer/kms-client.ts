@@ -12,11 +12,12 @@ export class KmsClient {
         console.log(`KmsClient: keyId = [${this.keyId}]`);
     }
 
-    public async encrypt(data: string) {
+    public async encrypt(data: string, context?: { [x: string]: string; }) {
         
         const resp = await backOff(() => this.kms.send(new EncryptCommand({
             KeyId: this.keyId,
-            Plaintext: Buffer.from(data)
+            Plaintext: Buffer.from(data),
+            EncryptionContext: context
         })));
 
         console.log(`KmsClient.encrypt: resp =`, resp);
@@ -26,10 +27,11 @@ export class KmsClient {
         return result;        
     }
 
-    public async decrypt(data: string) {
+    public async decrypt(data: string, context?: { [x: string]: string; }) {
 
 		const resp = await backOff(() => this.kms.send(new DecryptCommand({
-            CiphertextBlob: Buffer.from(data, 'base64')
+            CiphertextBlob: Buffer.from(data, 'base64'),
+            EncryptionContext: context
         })));
 
         if(!resp?.Plaintext) throw new Error('Failed to decrypt data');

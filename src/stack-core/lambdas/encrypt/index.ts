@@ -5,6 +5,8 @@ export async function handler(event: any, context: any) {
 
 		const sensitive = event?.currentIntent?.slots?.authNumber || '';
 		const sessionAttributes = event?.sessionAttributes || {};
+		const CONTEXT = typeof process.env.ENCRYPTION_CONTEXT === 'string'
+			? JSON.parse(process.env.ENCRYPTION_CONTEXT) : undefined;
 		
 		try {
 			
@@ -16,14 +18,14 @@ export async function handler(event: any, context: any) {
 
 			sessionAttributes.isValid = 'true';
 			const CC_LEN = process.env.CC_LEN!;
-			const ZIP_LEN = +process.env.ZIP_LEN!;
+			const ZIP_LEN = +process.env.ZIP_LEN!;			
 			const len = sensitive.length;
 			const kms = new KmsClient();
 
 			if(range === CC_LEN && len >= validation.min && len <= validation.max) {
-				sessionAttributes.creditcard = await kms.encrypt(sensitive);
+				sessionAttributes.creditcard = await kms.encrypt(sensitive, CONTEXT);
 			} else if(len === ZIP_LEN) {
-				sessionAttributes.zipcode = await kms.encrypt(sensitive);
+				sessionAttributes.zipcode = await kms.encrypt(sensitive, CONTEXT);
 			} else {
 				throw new Error(`Unexpected length [${len}]`);
 			}			

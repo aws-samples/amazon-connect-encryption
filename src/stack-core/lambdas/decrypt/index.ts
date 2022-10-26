@@ -10,9 +10,12 @@ export async function handler(event: any, context: any) {
 			const encrypted = event.Details?.Parameters?.encrypted || '';
 			console.log(`DecryptFn: encrypted = [${encrypted}]`);
 			if(!encrypted) throw new Error(`Parameter is null or blank: [encrypted]`);
+
+			const CONTEXT = typeof process.env.ENCRYPTION_CONTEXT === 'string'
+				? JSON.parse(process.env.ENCRYPTION_CONTEXT) : undefined;
 			
 			const kms = new KmsClient();
-			const data = await kms.decrypt(encrypted);
+			const data = await kms.decrypt(encrypted, CONTEXT);
 			resp = { Status: 'OK', Data: data };
 
 		} catch(err: any) {

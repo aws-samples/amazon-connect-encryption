@@ -14,8 +14,8 @@ export class CoreStack extends Stack {
 
 		const factory = new ResourceFactory(this, 'stack-core');
 		const stage = this.node.tryGetContext('stage') || Names.DEFAULT_STAGE;
-		const seq = this.node.tryGetContext('stage') || Names.DEFAULT_SEQ;
 		const name = this.node.tryGetContext('name') || Names.DEFAULT_NAME;
+		const token = this.node.tryGetContext('token') || 'TOP_SECRET';
 		const resources = [ '*' ];
 
 		//-----------------------------------------------------
@@ -61,9 +61,11 @@ export class CoreStack extends Stack {
 		});
 
 		const cmkAlias = new Alias(this, 'CMKAlias', {
-			aliasName: `alias/cmk-${seq}-${stage}-${name}-connect-crypto`,
+			aliasName: `alias/cmk-${stage}-${name}-connect-crypto`,
 			targetKey: cmk
 		});
+
+		const encryptionContext = JSON.stringify({ stage, name, token });
 
 		//-----------------------------------------------------
 		// CREATE LAMBDA RESOURCES
@@ -72,13 +74,18 @@ export class CoreStack extends Stack {
 		const kmsPolicyStmt = factory.createAllowPolicyStatement(['*'], kmsActions);
 		const cryptoLambdaRole = factory.createLambdaRole('CryptoRole', [ kmsPolicyStmt ]);
 		const utilLayer = factory.createLayerVersion('UtilLayer', 'stack-core/layers/util-layer');
-		
+
+		const env = {
+			CMK_ALIAS: cmkAlias.aliasName,
+			ENCRYPTION_CONTEXT: encryptionContext
+		};
+				
 		const encryptFn = factory.createFunction(
 			'EncryptFn',
 			'encrypt',
 			cryptoLambdaRole,
 			{ 
-				CMK_ALIAS: cmkAlias.aliasName,
+				...env,
 				CC_LEN: '15-16',
 				ZIP_LEN: '5'
 			},
@@ -89,7 +96,7 @@ export class CoreStack extends Stack {
 			'DecryptFn',
 			'decrypt',
 			cryptoLambdaRole,
-			{ CMK_ALIAS: cmkAlias.aliasName },
+			env,
 			[ utilLayer ]
 		);
 
