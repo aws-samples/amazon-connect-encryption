@@ -1,4 +1,4 @@
-import { KmsClient } from 'util-layer/kms-client';
+import { KmsKeyringNode, buildClient, CommitmentPolicy } from '@aws-crypto/client-node';
 
 export async function handler(event: any, context: any) {
 
@@ -10,13 +10,14 @@ export async function handler(event: any, context: any) {
 			const encrypted = event.Details?.Parameters?.encrypted || '';
 			console.log(`DecryptFn: encrypted = [${encrypted}]`);
 			if(!encrypted) throw new Error(`Parameter is null or blank: [encrypted]`);
-
-			const CONTEXT = typeof process.env.ENCRYPTION_CONTEXT === 'string'
-				? JSON.parse(process.env.ENCRYPTION_CONTEXT) : undefined;
-			
-			const kms = new KmsClient();
-			const data = await kms.decrypt(encrypted, CONTEXT);
-			resp = { Status: 'OK', Data: data };
+						
+			// Set up for encryption SDK
+			const generatorKeyId = process.env.PRIMARY_KEY!;
+			const keyIds = [ process.env.SECONDARY_KEY! ];
+			const keyRing = new KmsKeyringNode({ keyIds });
+			const { decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);			
+			const { plaintext } = await decrypt(keyRing, Buffer.from(encrypted, 'base64'));
+			resp = { Status: 'OK', Data: plaintext.toString() };
 
 		} catch(err: any) {
 			console.error('DecryptFn:', err);

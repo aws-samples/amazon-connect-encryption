@@ -30,8 +30,8 @@ export class CoreStack extends Stack {
 			'kms:ReEncrypt*'
 		];
 
-		const cmk = new Key(this, 'CMK', {
-			description: 'Symmetric key used with Amazon Connect environment',
+		const primaryKey = new Key(this, 'PrimaryKey', {
+			description: 'Symmetric key used to encrypt and decrypt data',
 			policy: new PolicyDocument({
 				statements: [
 					new PolicyStatement({
@@ -56,9 +56,27 @@ export class CoreStack extends Stack {
 			})
 		});
 
-		const cmkAlias = new Alias(this, 'CMKAlias', {
-			aliasName: `alias/cmk-${stage}-${name}-connect-crypto`,
-			targetKey: cmk
+		const primaryKeyAlias = new Alias(this, 'PrimaryKeyAlias', {
+			aliasName: `alias/primary-${stage}-${name}-key`,
+			targetKey: primaryKey
+		});
+
+		const secondaryKey = new Key(this, 'SecondaryKey', {
+			description: 'Symmetric key used to encrypt and decrypt the primary key',
+			policy: new PolicyDocument({
+				statements: [
+					new PolicyStatement({
+						principals: [ new ArnPrincipal(`arn:aws:iam::${this.account}:root`)],
+						actions: [ 'kms:*' ],
+						resources
+					})
+				]
+			})
+		});
+
+		new Alias(this, 'SecondaryKeyAlias', {
+			aliasName: `alias/secondary-${stage}-${name}-key`,
+			targetKey: primaryKey
 		});
 
 		const encryptionContext = JSON.stringify({ stage, name, token });
@@ -72,7 +90,8 @@ export class CoreStack extends Stack {
 		const utilLayer = factory.createLayerVersion('UtilLayer', 'stack-core/layers/util-layer');
 
 		const env = {
-			CMK_ALIAS: cmkAlias.aliasName,
+			PRIMARY_KEY: primaryKeyAlias.keyArn,
+			SECONDARY_KEY: secondaryKey.keyArn,
 			ENCRYPTION_CONTEXT: encryptionContext
 		};
 				
