@@ -1,4 +1,4 @@
-import { KmsClient } from 'util-layer/kms-client';
+import { KmsKeyringNode, buildClient, CommitmentPolicy } from '@aws-crypto/client-node';
 
 export async function handler(event: any, context: any) {
 
@@ -13,10 +13,19 @@ export async function handler(event: any, context: any) {
 
 			const CONTEXT = typeof process.env.ENCRYPTION_CONTEXT === 'string'
 				? JSON.parse(process.env.ENCRYPTION_CONTEXT) : undefined;
-			
-			const kms = new KmsClient();
-			const data = await kms.decrypt(encrypted, CONTEXT);
-			resp = { Status: 'OK', Data: data };
+						
+			// Set up for encryption SDK
+			const keyIds = [ process.env.WRAPPER_KEY! ];
+			const keyRing = new KmsKeyringNode({ keyIds });
+			const { decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);			
+			const { plaintext, messageHeader } = await decrypt(keyRing, Buffer.from(encrypted, 'base64'));
+			const { encryptionContext } = messageHeader;
+
+			Object.entries(CONTEXT).forEach(([key, value]) => {
+				if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
+			});
+
+			resp = { Status: 'OK', Data: plaintext.toString() };
 
 		} catch(err: any) {
 			console.error('DecryptFn:', err);

@@ -2,7 +2,7 @@
 
 This sample project demonstrates how to encrypt sensitive data such as PCI and PII collected through Amazon Connect and an Amazon Lex conversational bot. Included in this CDK-based project are:
 
-- Automated deployment of AWS Lambda functions, AWS Key Management Service encryption key and a sample Amazon Lex bot
+- Automated deployment of AWS Lambda functions, AWS Key Management Service encryption keys and a sample Amazon Lex bot
 - A sample Amazon Connect contact flow that leverages the Lex input bot an Lambda functions to encrypt a credit card number and zip code.
 
 ### Pre-Requisites

@@ -1,6 +1,12 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AccountPrincipal, ArnPrincipal, PolicyDocument, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import {
+	AccountPrincipal,
+	ArnPrincipal,
+	PolicyDocument,
+	PolicyStatement,
+	ServicePrincipal
+} from 'aws-cdk-lib/aws-iam';
 import { Alias, Key } from 'aws-cdk-lib/aws-kms';
 import { ResourceFactory } from '../common/resource-factory';
 import { LexBotConstruct } from './lex-bot-construct';
@@ -16,12 +22,12 @@ export class CoreStack extends Stack {
 		const stage = this.node.tryGetContext('stage') || Names.DEFAULT_STAGE;
 		const name = this.node.tryGetContext('name') || Names.DEFAULT_NAME;
 		const token = this.node.tryGetContext('token') || 'TOP_SECRET';
-		const resources = [ '*' ];
 
 		//-----------------------------------------------------
 		// CREATE KMS RESOURCES
 		//-----------------------------------------------------
 
+		const resources = [ '*' ];
 		const kmsActions = [
 			'kms:Decrypt',
 			'kms:DescribeKey',
@@ -30,8 +36,8 @@ export class CoreStack extends Stack {
 			'kms:ReEncrypt*'
 		];
 
-		const cmk = new Key(this, 'CMK', {
-			description: 'Symmetric key used with Amazon Connect environment',
+		const primaryKey = new Key(this, 'PrimaryKey', {
+			description: 'Symmetric key used to encrypt and decrypt data',
 			policy: new PolicyDocument({
 				statements: [
 					new PolicyStatement({
@@ -56,12 +62,28 @@ export class CoreStack extends Stack {
 			})
 		});
 
-		const cmkAlias = new Alias(this, 'CMKAlias', {
-			aliasName: `alias/cmk-${stage}-${name}-connect-crypto`,
-			targetKey: cmk
+		const primaryKeyAlias = new Alias(this, 'PrimaryKeyAlias', {
+			aliasName: `alias/${stage}-${name}-primary-key`,
+			targetKey: primaryKey
 		});
 
-		const encryptionContext = JSON.stringify({ stage, name, token });
+		const wrapperKey = new Key(this, 'WrapperKey', {
+			description: 'Symmetric key used to encrypt and decrypt the primary key',
+			policy: new PolicyDocument({
+				statements: [
+					new PolicyStatement({
+						principals: [ new ArnPrincipal(`arn:aws:iam::${this.account}:root`)],
+						actions: [ 'kms:*' ],
+						resources
+					})
+				]
+			})
+		});
+
+		new Alias(this, 'WrapperKeyAlias', {
+			aliasName: `alias/${stage}-${name}-wrapper-key`,
+			targetKey: primaryKey
+		});
 
 		//-----------------------------------------------------
 		// CREATE LAMBDA RESOURCES
@@ -72,8 +94,9 @@ export class CoreStack extends Stack {
 		const utilLayer = factory.createLayerVersion('UtilLayer', 'stack-core/layers/util-layer');
 
 		const env = {
-			CMK_ALIAS: cmkAlias.aliasName,
-			ENCRYPTION_CONTEXT: encryptionContext
+			PRIMARY_KEY: primaryKeyAlias.keyArn,
+			WRAPPER_KEY: wrapperKey.keyArn,
+			ENCRYPTION_CONTEXT: JSON.stringify({ stage, name, token })
 		};
 				
 		const encryptFn = factory.createFunction(

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import { App } from 'aws-cdk-lib';
-import { CoreStack } from './stack-core/connect-stack';
+import { CoreStack } from './stack-core/core-stack';
 import { DEFAULT_NAME, DEFAULT_STAGE } from './common/names';
 
 const app = new App();
