@@ -12,8 +12,7 @@ export async function handler(event: any, context: any) {
 			if(!encrypted) throw new Error(`Parameter is null or blank: [encrypted]`);
 						
 			// Set up for encryption SDK
-			const generatorKeyId = process.env.PRIMARY_KEY!;
-			const keyIds = [ process.env.SECONDARY_KEY! ];
+			const keyIds = [ process.env.WRAPPER_KEY! ];
 			const keyRing = new KmsKeyringNode({ keyIds });
 			const { decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);			
 			const { plaintext } = await decrypt(keyRing, Buffer.from(encrypted, 'base64'));

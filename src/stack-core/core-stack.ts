@@ -1,6 +1,12 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AccountPrincipal, ArnPrincipal, PolicyDocument, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import {
+	AccountPrincipal,
+	ArnPrincipal,
+	PolicyDocument,
+	PolicyStatement,
+	ServicePrincipal
+} from 'aws-cdk-lib/aws-iam';
 import { Alias, Key } from 'aws-cdk-lib/aws-kms';
 import { ResourceFactory } from '../common/resource-factory';
 import { LexBotConstruct } from './lex-bot-construct';
@@ -16,12 +22,12 @@ export class CoreStack extends Stack {
 		const stage = this.node.tryGetContext('stage') || Names.DEFAULT_STAGE;
 		const name = this.node.tryGetContext('name') || Names.DEFAULT_NAME;
 		const token = this.node.tryGetContext('token') || 'TOP_SECRET';
-		const resources = [ '*' ];
 
 		//-----------------------------------------------------
 		// CREATE KMS RESOURCES
 		//-----------------------------------------------------
 
+		const resources = [ '*' ];
 		const kmsActions = [
 			'kms:Decrypt',
 			'kms:DescribeKey',
@@ -57,11 +63,11 @@ export class CoreStack extends Stack {
 		});
 
 		const primaryKeyAlias = new Alias(this, 'PrimaryKeyAlias', {
-			aliasName: `alias/primary-${stage}-${name}-key`,
+			aliasName: `alias/${stage}-${name}-primary-key`,
 			targetKey: primaryKey
 		});
 
-		const secondaryKey = new Key(this, 'SecondaryKey', {
+		const wrapperKey = new Key(this, 'WrapperKey', {
 			description: 'Symmetric key used to encrypt and decrypt the primary key',
 			policy: new PolicyDocument({
 				statements: [
@@ -74,12 +80,10 @@ export class CoreStack extends Stack {
 			})
 		});
 
-		new Alias(this, 'SecondaryKeyAlias', {
-			aliasName: `alias/secondary-${stage}-${name}-key`,
+		new Alias(this, 'WrapperKeyAlias', {
+			aliasName: `alias/${stage}-${name}-wrapper-key`,
 			targetKey: primaryKey
 		});
-
-		const encryptionContext = JSON.stringify({ stage, name, token });
 
 		//-----------------------------------------------------
 		// CREATE LAMBDA RESOURCES
@@ -91,8 +95,8 @@ export class CoreStack extends Stack {
 
 		const env = {
 			PRIMARY_KEY: primaryKeyAlias.keyArn,
-			SECONDARY_KEY: secondaryKey.keyArn,
-			ENCRYPTION_CONTEXT: encryptionContext
+			WRAPPER_KEY: wrapperKey.keyArn,
+			ENCRYPTION_CONTEXT: JSON.stringify({ stage, name, token })
 		};
 				
 		const encryptFn = factory.createFunction(

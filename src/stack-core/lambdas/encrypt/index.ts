@@ -21,7 +21,7 @@ export async function handler(event: any, context: any) {
 			
 			// Set up for encryption SDK
 			const generatorKeyId = process.env.PRIMARY_KEY!;
-			const keyIds = [ process.env.SECONDARY_KEY! ];
+			const keyIds = [ process.env.WRAPPER_KEY! ];
 			const keyRing = new KmsKeyringNode({ generatorKeyId, keyIds });
 			const { encrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);
 			const CONTEXT = typeof process.env.ENCRYPTION_CONTEXT === 'string'
